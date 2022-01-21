@@ -11,10 +11,16 @@ Consideraciones:
 3. Se decide agregar libreria findspark para poder encontrar la ruta a spark facilmente.
 4. Se decide utilizar un script ya que el proceso de ETL es por definicion lineal (Job): extract, transform, load.
 5. En la etapa Extract: se lee los archivos csv que fueron otorgados como input del problema (dataset)
-6. En la etapa Transform: se normaliza la base, se procede a calcular los indicadores solicitados
-7. En la etapa Load: se prepara el output (se escriben los resultados en variables JSON y se imprimen en pantalla, se entendería que despues esta información podría ser enviada mediante una API a los servidores del área de Analytics. Se podría también escribir en un archivo)
-8. Se entiende que el ETL es un proceso que debería estar automatizado, por lo que se entiende que no debería interactuar con el humano, que debería manejar errores de datos en la medida de lo posbile y razonable, como tambien en caso de que el error impida seguir el proceso, alertar.
+6. En la etapa Transform: se limpian los datos (espacios en palabras, palabras en datos numéricos), se normaliza la base, se procede a calcular los indicadores solicitados
+7. En la etapa Load: se prepara el output (se se imprimen en pantalla, se entendería que despues esta información podría ser enviada mediante una API a los servidores del área de Analytics. Se crean archivos JSON con los reportes)
+8. Se usa logica de data pipelines para hacer los cálculos:
+    a: Sobre la base normalizada se calculan los promedios por juego/consola (agregando las fechas)
+    b: se calcula TOP 10 y WORST 10 por consola.
+    c: Entendiendo la relación entre consola y compañia, se calculan los TOP 10 y WORST 10 por compañia usando los TOP ya procesados para cada consola
+    d: EL TOP Y WORST DE TODOS LOS JUEGOS van a ser los top y worst de los subconjuntos que los contienen, por lo que se toma los top y worst de las compañias para calcular os nuevos TOP y WORST GLOBALES.
+
+    usando esta lógica se ahorra tiempo de computo, aprovechando los calculos anteriores.
 
 Deployment:
 
-Se debe ejecutar el archivo main.py
+Se debe ejecutar el archivo main.py desde a ubicacion de-challenge/Deployment/. Es necesario estar ubicado en esa ruta para la correcta lectura de las rutas de acceso a los archivos input del problema.
