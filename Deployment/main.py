@@ -50,31 +50,42 @@ result_df= result_input \
 result1a_df = result_df.groupBy("console_id","game_id").agg(avg("metascore").alias("avg_meta"), avg("userscore").alias("avg_user"))
 
 ######    The top 10 best games for each console/company.
-print("################   TOP 10  GAMES EACH CONSOLE:  ##############")
+
 # a. for each console:
+print("################   TOP 10  GAMES EACH CONSOLE:  ##############")
 window1a = Window.partitionBy(result1a_df['console_id']).orderBy(desc("avg_meta"),desc("avg_user"))
-report1a = result1a_df.select('*', rank().over(window1a).alias('rank')).filter(col('rank') <= 10)
+report1a = result1a_df.select('*', rank().over(window1a).alias('rank')).filter(col('rank') <= 10) \
+    .join(consoles_df,result1a_df["console_id"]==consoles_df["id"]) \
+    .join(companies_df,consoles_df["company_id"]==companies_df["id"]) \
+    .join(games_df,result1a_df["game_id"]==games_df["id"]) \
+    .drop(*["console_id","id","company_id","game_id"])
 print(report1a)
 report1a.write.mode("overwrite").json("report1a.json")
 #b. for each company
-result1b_df = report1a.join(consoles_df, consoles_df["id"]==report1a["console_id"])
-result1b_df= result1b_df.drop(col("rank")).drop(col("id"))
-window1b= Window.partitionBy(result1b_df['company_id']).orderBy(desc("avg_meta"),desc("avg_user"))
+print("################   TOP 10  GAMES EACH COMPANY:  ##############")
+result1b_df= report1a.drop(col("rank"))
+window1b= Window.partitionBy(result1b_df['company_name']).orderBy(desc("avg_meta"),desc("avg_user"))
 report1b = result1b_df.select('*', rank().over(window1b).alias('rank')).filter(col('rank') <= 10)
 print(report1b)
 report1b.write.mode("overwrite").json("report1b.json")
 
 #######    The worst 10 games for each console/company.
-print("################   WORST 10  GAMES EACH CONSOLE:  ##############")
+
 #a. for each console:
+print("################   WORST 10  GAMES EACH CONSOLE:  ##############")
 window2a = Window.partitionBy(result1a_df['console_id']).orderBy("avg_meta","avg_user")
-report2a = result1a_df.select('*', rank().over(window2a).alias('rank')).filter(col('rank') <= 10)
+report2a = result1a_df.select('*', rank().over(window2a).alias('rank')).filter(col('rank') <= 10) \
+    .join(consoles_df,result1a_df["console_id"]==consoles_df["id"]) \
+    .join(companies_df,consoles_df["company_id"]==companies_df["id"]) \
+    .join(games_df,result1a_df["game_id"]==games_df["id"]) \
+    .drop(*["console_id","id","company_id","game_id"])
 print(report2a)
 report2a.write.mode("overwrite").json("report2a.json")
 #b. for each company
-result2b_df = report2a.join(consoles_df, consoles_df["id"]==report1a["console_id"])
-result2b_df= result2b_df.drop(col("rank")).drop(col("id"))
-window2b= Window.partitionBy(result2b_df['company_id']).orderBy("avg_meta","avg_user")
+print("################   WORST 10  GAMES EACH COMPANY:  ##############")
+
+result2b_df= report2a.drop(col("rank"))
+window2b= Window.partitionBy(result2b_df['company_name']).orderBy("avg_meta","avg_user")
 report2b = result2b_df.select('*', rank().over(window2b).alias('rank')).filter(col('rank') <= 10)
 print(report2b)
 report2b.write.mode("overwrite").json("report2b.json")
